@@ -6,13 +6,13 @@
     const _ = require('lodash');
     const EventEmitter = require('events');
     const WebSocketServer = require('websocket').server;
-
+    
     class Client extends EventEmitter {
       constructor (connection, sessionId) {
         super();
 
-        this.connection = connection;
-        this.sessionId = sessionId;
+        this._connection = connection;
+        this._sessionId = sessionId;
 
         connection.on('message', (message) => {
           this._onConnectionMessage(connection, message);
@@ -22,13 +22,21 @@
           this._onConnectionClose(connection, reasonCode, description);
         });
       }
+      
+      getSessionId() {
+        return this._sessionId;
+      }
+      
+      getConnection() {
+        return this._connection;
+      }
 
       sendMessage (data) {
-        this._sendMessage(this.connection, JSON.stringify(data));
+        this._sendMessage(this.getConnection(), JSON.stringify(data));
       }
 
       sendBinary (data) {
-        this._sendBinary(this.connection, data);
+        this._sendBinary(this.getConnection(), data);
       }
 
       _sendMessage (connection, message) {
@@ -85,9 +93,10 @@
       _onServerRequest (request) {
         const urlParts = request.resourceURL.path.split('/');
         const sessionId = _.last(urlParts);
+        // TODO: Check if session is valid 
         const connection = request.accept();
         const client = new Client(connection, sessionId);
-
+        
         client.on("message", (data) => {
           this.emit("message", {
             client: client,
