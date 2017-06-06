@@ -1,5 +1,5 @@
 {
-  "name": "shady-websocket",
+  "name": "shady-websockets",
   "version": "0.0.1",
   "description": "Websocket plugin to shady-engine",
   "main": "index.js",
