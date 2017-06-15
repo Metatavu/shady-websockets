@@ -88,6 +88,12 @@
         this._server.on("request", this._onServerRequest.bind(this));
       }
       
+      getClients() {
+        return _.map(this._clients, (client) => {
+          return client;
+        });
+      }
+      
       sendMessageToAllClients (data) {
         _.forEach(this._clients, (client, sessionId) => {
           client.sendMessage(data);
