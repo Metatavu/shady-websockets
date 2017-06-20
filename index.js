@@ -75,8 +75,10 @@
 
     class WebSockets extends EventEmitter {
 
-      constructor (httpServer) {
+      constructor (httpServer, acceptMethod) {
         super();
+        
+        this.acceptMethod = acceptMethod;
         
         this._clients = {};
 
@@ -107,28 +109,33 @@
       _onServerRequest (request) {
         const urlParts = request.resourceURL.path.split('/');
         const sessionId = _.last(urlParts);
-        // TODO: Check if session is valid 
-        const connection = request.accept();
-        const client = new Client(connection, sessionId);
-        this._clients[sessionId] = client;
+        const accept = this.acceptMethod ? this.acceptMethod(sessionId) : true;
         
-        client.on("message", (data) => {
-          this.emit("message", {
-            client: client,
-            data: data
-          });
-        });
+        if (!accept) {
+          request.reject();
+        } else {
+          const connection = request.accept();
+          const client = new Client(connection, sessionId);
+          this._clients[sessionId] = client;
 
-        client.on("close", (sessionId, connection, reasonCode, description) => {
-          delete this._clients[sessionId];
-          this.emit("close", {
-            client: client,
-            sessionId: sessionId,
-            connection: connection,
-            reasonCode: reasonCode,
-            description: description
+          client.on("message", (data) => {
+            this.emit("message", {
+              client: client,
+              data: data
+            });
           });
-        });
+
+          client.on("close", (sessionId, connection, reasonCode, description) => {
+            delete this._clients[sessionId];
+            this.emit("close", {
+              client: client,
+              sessionId: sessionId,
+              connection: connection,
+              reasonCode: reasonCode,
+              description: description
+            });
+          });
+        }
       }
 
     };
