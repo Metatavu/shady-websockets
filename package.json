@@ -1,6 +1,6 @@
 {
   "name": "shady-websockets",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Websocket plugin to shady-engine",
   "main": "index.js",
   "plugin": {

@@ -101,6 +101,14 @@
           client.sendMessage(data);
         });
       }
+      
+      getAccepted(sessionId, callback) {
+        if (!this.acceptMethod) {
+          callback(true);
+        } else {
+          this.acceptMethod(sessionId, callback);
+        }
+      }
 
       _onServerConnection (webSocket) {
         const url = webSocket.upgradeReq.url;
@@ -109,33 +117,34 @@
       _onServerRequest (request) {
         const urlParts = request.resourceURL.path.split('/');
         const sessionId = _.last(urlParts);
-        const accept = this.acceptMethod ? this.acceptMethod(sessionId) : true;
         
-        if (!accept) {
-          request.reject();
-        } else {
-          const connection = request.accept();
-          const client = new Client(connection, sessionId);
-          this._clients[sessionId] = client;
+        this.getAccepted(sessionId, (accept) => {
+          if (!accept) {
+            request.reject();
+          } else {
+            const connection = request.accept();
+            const client = new Client(connection, sessionId);
+            this._clients[sessionId] = client;
 
-          client.on("message", (data) => {
-            this.emit("message", {
-              client: client,
-              data: data
+            client.on("message", (data) => {
+              this.emit("message", {
+                client: client,
+                data: data
+              });
             });
-          });
 
-          client.on("close", (sessionId, connection, reasonCode, description) => {
-            delete this._clients[sessionId];
-            this.emit("close", {
-              client: client,
-              sessionId: sessionId,
-              connection: connection,
-              reasonCode: reasonCode,
-              description: description
+            client.on("close", (sessionId, connection, reasonCode, description) => {
+              delete this._clients[sessionId];
+              this.emit("close", {
+                client: client,
+                sessionId: sessionId,
+                connection: connection,
+                reasonCode: reasonCode,
+                description: description
+              });
             });
-          });
-        }
+          }
+        });
       }
 
     };
