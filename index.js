@@ -14,12 +14,12 @@
         this._connection = connection;
         this._sessionId = sessionId;
 
-        connection.on('message', (message) => {
+        this._connection.on('message', (message) => {
           this._onConnectionMessage(connection, message);
         });
 
-        connection.on('close', (reasonCode, description) => {
-          this._onConnectionClose(connection, reasonCode, description);
+        this._connection.on('close', (reasonCode, description) => {
+          this._onConnectionClose(this._connection, reasonCode, description);
         });
       }
       
@@ -52,7 +52,7 @@
           case 'utf8':
             try {
               this.emit("message", {
-                sessionId: this.sessionId,
+                sessionId: this._sessionId,
                 message: JSON.parse(message.utf8Data),
                 connection: connection
               });
@@ -65,7 +65,7 @@
 
       _onConnectionClose (connection, reasonCode, description) {
         this.emit("close", {
-          sessionId: this.sessionId,
+          sessionId: this._sessionId,
           connection: connection,
           reasonCode: reasonCode,
           description: description
@@ -133,14 +133,14 @@
               });
             });
 
-            client.on("close", (sessionId, connection, reasonCode, description) => {
-              delete this._clients[sessionId];
+            client.on("close", (data) => {
+              delete this._clients[data.sessionId];
               this.emit("close", {
                 client: client,
-                sessionId: sessionId,
-                connection: connection,
-                reasonCode: reasonCode,
-                description: description
+                sessionId: data.sessionId,
+                connection: data.connection,
+                reasonCode: data.reasonCode,
+                description: data.description
               });
             });
           }
