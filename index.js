@@ -57,7 +57,7 @@
                 connection: connection
               });
             } catch (e) {
-              // TODO: LOG
+              console.error("Sending message to WebSocket client failed", e);
             }
           break;
         }
@@ -86,7 +86,6 @@
           httpServer: httpServer
         });
 
-        this._server.on("connection", this._onServerConnection.bind(this));
         this._server.on("request", this._onServerRequest.bind(this));
       }
       
@@ -110,8 +109,8 @@
         }
       }
 
-      _onServerConnection (webSocket) {
-        const url = webSocket.upgradeReq.url;
+      getConnectionCount() {
+        return Object.keys(this._clients).length;
       }
 
       _onServerRequest (request) {
@@ -122,6 +121,10 @@
           if (!accept) {
             request.reject();
           } else {
+            if (options["log-socket-open"]) {
+              console.log(`WebSocket opened. Current connection count: ${this.getConnectionCount()}`);
+            }
+
             const connection = request.accept();
             const client = new Client(connection, sessionId);
             this._clients[sessionId] = client;
@@ -134,14 +137,26 @@
             });
 
             client.on("close", (data) => {
-              delete this._clients[data.sessionId];
-              this.emit("close", {
-                client: client,
-                sessionId: data.sessionId,
-                connection: data.connection,
-                reasonCode: data.reasonCode,
-                description: data.description
-              });
+              try {
+                if (options["log-socket-close"]) {
+                  console.log("WebSocket closing...");
+                }
+
+                delete this._clients[data.sessionId];
+                this.emit("close", {
+                  client: client,
+                  sessionId: data.sessionId,
+                  connection: data.connection,
+                  reasonCode: data.reasonCode,
+                  description: data.description
+                });
+
+                if (options["log-socket-close"]) {
+                  console.log(`WebSocket closed. Current connection count: ${this.getConnectionCount()}`);
+                }
+              } catch (e) {
+                console.error("Error occurred while closing the WebSocket", e);
+              }
             });
           }
         });
