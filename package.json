@@ -1,6 +1,6 @@
 {
   "name": "shady-websockets",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Websocket plugin to shady-engine",
   "main": "index.js",
   "plugin": {
@@ -14,7 +14,7 @@
   "author": "Metatavu Oy",
   "license": "AGPL-3.0",
   "dependencies": {
-    "lodash": "4.17.4",
-    "websocket": "1.0.24"
+    "lodash": "4.17.10",
+    "websocket": "1.0.26"
   }
 }
