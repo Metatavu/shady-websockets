@@ -121,10 +121,6 @@
           if (!accept) {
             request.reject();
           } else {
-            if (options["log-socket-open"]) {
-              console.log(`WebSocket opened. Current connection count: ${this.getConnectionCount()}`);
-            }
-
             const connection = request.accept();
             const client = new Client(connection, sessionId);
             this._clients[sessionId] = client;
@@ -158,6 +154,10 @@
                 console.error("Error occurred while closing the WebSocket", e);
               }
             });
+
+            if (options["log-socket-open"]) {
+              console.log(`WebSocket opened. Current connection count: ${this.getConnectionCount()}`);
+            }           
           }
         });
       }
